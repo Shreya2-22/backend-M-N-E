@@ -10,4 +10,3 @@ const connectDB = async () => {
   }
 }
 export default connectDB;
-//KHTEYiqyQL7HFR7i
