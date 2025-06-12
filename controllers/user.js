@@ -1,5 +1,7 @@
 import {User} from '../models/user.js';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import cookieParser from 'cookie-parser';
 
 export const register = async(req, res)=>{
     try{
@@ -39,9 +41,24 @@ export const login = async(req, res)=>{
         if(!isPasswordMatch){
             return res.status(403).json({success:false, message: "Invalid email or password"});
         }
-        return res.status(200).json({success:true, message: "Login successful", user});
+        const token = jwt.sign({id: user._id}, process.env.SECRET_KEY, {expiresIn: '1d'});
+
+        return res.status(200)
+        .cookie("token", token, {httpOnly:true, sameSite:"strict", maxAge:24 * 60 * 60 * 1000})
+        .json({success:true, message: "Login successful", user});
     }catch(error){
         console.error("Error in user login:", error);
+        return res.status(500).json({success:false, message: "Internal server error"});
+    }
+}
+
+export const logout = async(_, res)=>{
+    try{
+        return res.status(200)
+        .cookie("token", "", { maxAge:0})
+        .json({success:true, message: "Logout successful"});
+    }catch(error){
+        console.error("Error in user logout:", error);
         return res.status(500).json({success:false, message: "Internal server error"});
     }
 }
